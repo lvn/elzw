@@ -1,11 +1,12 @@
 
-
+$VERBOSE = true
 
 class Compresser
   def initialize(input, output)
     @input = input
     @output = output
 
+    # initialize dictionary
     @proto_dict = {}
     @proto_decode_dict = {}
     for i in 0..25 do
@@ -18,51 +19,49 @@ class Compresser
 
   def encode
     word = ''
+    input_size = 0
+    output_size = 0
     @input.each_char do |c|
       new_word = word + c
+      input_size += 1
       if @proto_dict[new_word] == nil
         @proto_dict[new_word] = @proto_dict.length
         @output.write(@proto_dict[word].chr)
+        output_size += 1
         new_word = c
       end
       word = new_word
     end
     @output.write(@proto_dict[word].chr)
+    if $VERBOSE
+      puts "compression: input size: #{input_size} => output size: #{output_size+1}"
+      puts "compressed to #{100*(output_size+1)/(input_size)}% of original size"
+    end
   end
 
   def decode
     old_i = nil
+    input_size = 0
+    output_size = 0
     @input.each_char do |c|
+      input_size += 1
       i = c.ord.to_s(16).hex
       unless old_i == nil
         # append new word to end of dictionary
-        puts(@proto_decode_dict[old_i])
         if @proto_decode_dict[i] == nil
           @proto_decode_dict[@proto_decode_dict.length] = @proto_decode_dict[old_i] + @proto_decode_dict[old_i][0]
         else
           @proto_decode_dict[@proto_decode_dict.length] = @proto_decode_dict[old_i] + @proto_decode_dict[c.ord.to_s(16).hex][0]
         end
-        puts @proto_decode_dict
       end
       old_i = i
-      @output.write(@proto_decode_dict[old_i])
+      decoded_string = @proto_decode_dict[old_i]
+      output_size += decoded_string.length
+      @output.write(decoded_string)
+    end
+    if $VERBOSE
+      puts "decompression: input size: #{input_size} => output size: #{output_size}"
     end
   end
 end
-
-inf_name = '../test_infile.txt'
-outf_name = '../test_outfile.txt'
-outf_name2 = '../test_outfile2.txt'
-en_inf = File.new(inf_name, 'r')
-en_outf = File.new(outf_name, 'w')
-Compresser.new(en_inf, en_outf).encode()
-en_inf.close
-en_outf.close
-
-de_inf = File.new(outf_name, 'r')
-de_outf = File.new(outf_name2, 'w')
-Compresser.new(de_inf, de_outf).decode()
-de_inf.close
-de_outf.close
-
 
