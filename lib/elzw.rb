@@ -2,10 +2,7 @@
 $VERBOSE = true
 
 class Compresser
-  def initialize(input, output)
-    @input = input
-    @output = output
-
+  def initialize_dictionary
     # initialize dictionary
     @proto_dict = {}
     @proto_decode_dict = {}
@@ -15,6 +12,12 @@ class Compresser
     end
     @proto_dict[10.chr] = @proto_dict.length
     @proto_decode_dict[@proto_decode_dict.length] = 10.chr
+  end
+
+  def initialize(input, output)
+    @input = input
+    @output = output
+    self.initialize_dictionary
   end
 
   def encode
@@ -34,6 +37,7 @@ class Compresser
     end
     @output.write(@proto_dict[word].chr)
     if $VERBOSE
+      puts @proto_dict
       puts "compression: input size: #{input_size} => output size: #{output_size+1}"
       puts "compressed to #{100*(output_size+1)/(input_size)}% of original size"
     end
@@ -64,4 +68,3 @@ class Compresser
     end
   end
 end
-
